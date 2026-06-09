@@ -5,7 +5,10 @@ Una aplicación web interactiva desarrollada en **Svelte 3** que permite explora
 [![Svelte](https://img.shields.io/badge/Svelte-3.55-FF3E00?style=for-the-badge&logo=svelte&logoColor=white)](https://svelte.dev/)
 [![SMUI](https://img.shields.io/badge/SMUI-6.1-FF3E00?style=for-the-badge)](https://sveltematerialui.com/)
 [![Rollup](https://img.shields.io/badge/Rollup-3.x-BD2C00?style=for-the-badge&logo=rollup.js&logoColor=white)](https://rollupjs.org/)
+[![Deploy](https://img.shields.io/badge/Deploy-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://svelte-paises.vercel.app)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+
+**🌐 Producción:** [https://svelte-paises.vercel.app](https://svelte-paises.vercel.app)
 
 ## Características
 
