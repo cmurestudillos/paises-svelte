@@ -1,40 +1,36 @@
-.bg-custom {
-	background: linear-gradient(to right, rgb(252, 74, 26), rgb(247, 183, 51));
-  }
-  
-  .btn {
-	flex: 1 1 auto;
-	padding: 10px;
-	text-align: center;
-	text-transform: uppercase;
-	transition: 0.5s;
-	background-size: 200% auto;
-	color: white;
-	box-shadow: 0 0 20px #eee;
-	border-radius: 10px;
-	border: 1px solid #61dbfb !important;
-	margin: 0 auto;
-  }
-  
-  .btn-4 {
-	background-image: linear-gradient(to right, #80c7d0 0%, #c2f0fb 51%, #61dbfb 100%);
-  }
-  
-  .btn:hover {
-	background-position: right center;
-  }
-  
-  .active{
-	color: white;
-  }
-  
-  .active:hover{
-	text-decoration: none;
-  }
-  
-  .card-header {
-	padding: .75rem 1.25rem;
-	margin-bottom: 0 !important; 
-	background-color: transparent !important;
-	border-bottom: none;
-  }
+/* ================================
+   Paleta — Naranja #FC4A1A → #F7B733
+   ================================ */
+:root {
+  --grad-start: #FC4A1A;
+  --grad-end:   #F7B733;
+  --primary:    #FC4A1A;
+  --primary-dk: #c23300;
+
+  /* MDC / SMUI CSS custom properties */
+  --mdc-theme-primary:                       #FC4A1A;
+  --mdc-theme-secondary:                     #F7B733;
+  --mdc-theme-background:                    #f8f5f2;
+  --mdc-theme-surface:                       #ffffff;
+  --mdc-theme-on-primary:                    #ffffff;
+  --mdc-theme-on-secondary:                  #000000;
+  --mdc-theme-on-surface:                    #1a1a1a;
+  --mdc-theme-text-primary-on-background:    rgba(0,0,0,.87);
+  --mdc-theme-text-secondary-on-background:  rgba(0,0,0,.54);
+  --mdc-theme-text-hint-on-background:       rgba(0,0,0,.38);
+  --mdc-theme-text-disabled-on-background:   rgba(0,0,0,.38);
+
+  /* Ripple color */
+  --mdc-ripple-color: #FC4A1A;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #f8f5f2;
+  color: #1a1a1a;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}

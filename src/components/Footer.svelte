@@ -1,16 +1,44 @@
 <footer>
-    <p>Copyright © - Designed and Created by: <em><strong>Carlos Mur</strong></em></p>
-  </footer>
-  
-  <style>
+    <div class="footer-inner">
+        <p class="footer-copy">
+            Copyright &copy; 2026 — Designed and Created by <strong>Carlos Mur</strong>
+        </p>
+        <p class="footer-stack">
+            Svelte 3 &middot; Svelte Material UI 6 &middot; REST Countries API
+        </p>
+    </div>
+</footer>
+
+<style>
     footer {
-      background: linear-gradient(to right, rgb(252, 74, 26), rgb(247, 183, 51));
-      color: white;
-      padding: 0.5rem;
-      text-align: center;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
+        background: linear-gradient(to right, #FC4A1A, #F7B733);
+        color: white;
+        width: 100%;
+        min-height: 90px;
     }
-  </style>
-  
+
+    .footer-inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        text-align: center;
+    }
+
+    .footer-copy {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .footer-stack {
+        margin: 0;
+        font-size: 0.78rem;
+        opacity: 0.85;
+        letter-spacing: 0.02em;
+    }
+</style>

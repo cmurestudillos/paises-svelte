@@ -1,220 +1,142 @@
 <script>
 	import { onMount } from 'svelte';
-	import 'bootstrap/dist/css/bootstrap.min.css';
+	import Card, { Content } from '@smui/card';
+	import Textfield from '@smui/textfield';
+	import Select, { Option } from '@smui/select';
+	import Button, { Label } from '@smui/button';
+	import CircularProgress from '@smui/circular-progress';
 	import Header from './components/Header.svelte';
 	import Footer from './components/Footer.svelte';
-	
+
 	let allCountries = [];
 	let countriesData = [];
 	let loading = true;
 	let error = null;
 	let searchTerm = '';
-	let selectedContinent = 'all';
-	let continents = [];
-  
+	let selectedRegion = '';
+	let regiones = [];
+
+	const formatPoblacion = (pop) => {
+		if (pop >= 1_000_000_000) return (pop / 1_000_000_000).toFixed(1) + 'B';
+		if (pop >= 1_000_000) return (pop / 1_000_000).toFixed(1) + 'M';
+		if (pop >= 1_000) return Math.round(pop / 1_000) + 'K';
+		return pop.toString();
+	};
+
 	onMount(async () => {
 		try {
 			const response = await fetch('https://countries-api-service.vercel.app/api/countries');
 			const result = await response.json();
-			
-			if (result.success) {
-				allCountries = result.data;
-				countriesData = result.data;
-				
-				// Extraer continentes únicos
-				const continentSet = new Set();
-				result.data.forEach(country => {
-					if (country.continents) {
-						country.continents.forEach(continent => continentSet.add(continent));
-					}
-				});
-				continents = Array.from(continentSet).sort();
+			const data = result.data ?? result;
+			if (Array.isArray(data)) {
+				allCountries = data;
+				countriesData = data;
+				regiones = [...new Set(data.map(c => c.region).filter(Boolean))].sort();
 			}
-			loading = false;
 		} catch (err) {
 			error = err.message;
+		} finally {
 			loading = false;
 		}
 	});
 
-	// Función reactiva para filtrar países
 	$: {
+		const q = searchTerm.toLowerCase();
 		countriesData = allCountries.filter(country => {
-			// Filtro por búsqueda
-			const matchesSearch = country.name.common
-				.toLowerCase()
-				.includes(searchTerm.toLowerCase());
-			
-			// Filtro por continente
-			const matchesContinent = selectedContinent === 'all' || 
-				(country.continents && country.continents.includes(selectedContinent));
-			
-			return matchesSearch && matchesContinent;
+			const matchSearch = !searchTerm ||
+				country.name.common.toLowerCase().includes(q) ||
+				country.name.official.toLowerCase().includes(q) ||
+				(country.capital?.[0] && country.capital[0].toLowerCase().includes(q));
+			const matchRegion = !selectedRegion || country.region === selectedRegion;
+			return matchSearch && matchRegion;
 		});
 	}
 
 	function clearFilters() {
 		searchTerm = '';
-		selectedContinent = 'all';
+		selectedRegion = '';
 	}
 </script>
 
-<Header title="Países del Mundo" />
+<Header />
 
-<main>
+<main class="main-container">
 	{#if loading}
-		<div class="container text-center mt-5">
-			<div class="spinner-border text-primary" role="status">
-				<span class="visually-hidden">Cargando...</span>
-			</div>
+		<div class="loading-center">
+			<CircularProgress style="height:56px;width:56px;" indeterminate />
+			<p>Cargando países...</p>
 		</div>
 	{:else if error}
-		<div class="container mt-5">
-			<div class="alert alert-danger" role="alert">
-				Error al cargar los datos: {error}
-			</div>
+		<div class="error-container">
+			<span class="material-icons error-icon">error_outline</span>
+			<p>Error al cargar los datos: {error}</p>
 		</div>
 	{:else}
-		<!-- Barra de búsqueda y filtros -->
-		<div class="container mb-4">
-			<div class="filters-container">
-				<div class="row g-3">
-					<div class="col-md-6">
-						<div class="input-group">
-							<span class="input-group-text">
-								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-									<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-								</svg>
-							</span>
-							<input 
-								type="text" 
-								class="form-control" 
-								placeholder="Buscar país..."
-								bind:value={searchTerm}
-							>
-							{#if searchTerm}
-								<button 
-									class="btn btn-outline-secondary" 
-									type="button"
-									on:click={() => searchTerm = ''}
-								>
-									✕
-								</button>
-							{/if}
-						</div>
-					</div>
-					
-					<div class="col-md-4">
-						<select 
-							class="form-select" 
-							bind:value={selectedContinent}
-						>
-							<option value="all">🌍 Todos los continentes</option>
-							{#each continents as continent}
-								<option value={continent}>{continent}</option>
-							{/each}
-						</select>
-					</div>
-					
-					<div class="col-md-2">
-						<button 
-							class="btn btn-outline-danger w-100" 
-							on:click={clearFilters}
-							disabled={searchTerm === '' && selectedContinent === 'all'}
-						>
-							Limpiar
-						</button>
-					</div>
-				</div>
-				
-				<!-- Contador de resultados -->
-				<div class="mt-3">
-					<span class="badge bg-info">
-						{countriesData.length} {countriesData.length === 1 ? 'país encontrado' : 'países encontrados'}
-					</span>
-				</div>
+		<div class="filtros-bar">
+			<div class="filtro-search">
+				<Textfield
+					bind:value={searchTerm}
+					label="Buscar país o capital..."
+					variant="outlined"
+					style="width: 100%;" />
 			</div>
+			<div class="filtro-region">
+				<Select
+					bind:value={selectedRegion}
+					label="Región"
+					variant="outlined"
+					style="width: 100%;">
+					<Option value="">Todas las regiones</Option>
+					{#each regiones as region}
+						<Option value={region}>{region}</Option>
+					{/each}
+				</Select>
+			</div>
+			<Button
+				on:click={clearFilters}
+				variant="outlined"
+				disabled={!searchTerm && !selectedRegion}>
+				<Label>Limpiar</Label>
+			</Button>
+			<span class="resultado-contador">
+				<strong>{countriesData.length}</strong> / {allCountries.length} países
+			</span>
 		</div>
 
-		<!-- Lista de países -->
-		{#if countriesData.length > 0}
-			{#each countriesData as country, index}
-			<div class="container border-bottom country-item">
-				<div class="accordion w-75 float-start">
-					<div>
-						<input type="checkbox" id={`section${index}`} class="accordion__input">
-						<label for={`section${index}`} class="accordion__label">
-							{country.flag} {country.name.common}
-						</label>
-						<div class="accordion__content">
-							<div class="row g-2">
-								<div class="col-md-6">
-									<strong>🏛️ Capital: </strong>
-									<span class="badge text-bg-success">
-										{country.capital && country.capital[0] ? country.capital[0] : 'N/A'}
-									</span>
-								</div>
-								<div class="col-md-6">
-									<strong>👥 Población: </strong>
-									<span class="badge text-bg-primary">
-										{country.population.toLocaleString('es-ES')}
-									</span>
-								</div>
-								<div class="col-md-6">
-									<strong>🗺️ Región: </strong>
-									<span class="badge text-bg-info">
-										{country.region}
-									</span>
-								</div>
-								<div class="col-md-6">
-									<strong>📍 Subregión: </strong>
-									<span class="badge text-bg-warning">
-										{country.subregion || 'N/A'}
-									</span>
-								</div>
-								<div class="col-md-6">
-									<strong>🌍 Continente: </strong>
-									<span class="badge text-bg-secondary">
-										{country.continents ? country.continents.join(', ') : 'N/A'}
-									</span>
-								</div>
-								<div class="col-md-6">
-									<strong>💬 Idiomas: </strong>
-									<span class="badge text-bg-dark">
-										{country.languages ? Object.values(country.languages).join(', ') : 'N/A'}
-									</span>
-								</div>
-								{#if country.currencies}
-									<div class="col-12">
-										<strong>💰 Moneda: </strong>
-										{#each Object.entries(country.currencies) as [code, currency]}
-											<span class="badge text-bg-success me-1">
-												{currency.name} ({currency.symbol})
-											</span>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</div>
-					</div>
-				</div>					
-				<img 
-					class="float-end rounded-circle shadow border" 
-					src={country.flags.svg} 
-					alt={`Bandera de ${country.name.common}`}
-					loading="lazy"
-				>
+		{#if countriesData.length === 0}
+			<div class="no-resultados">
+				<span class="material-icons" style="font-size:3rem;color:#FC4A1A;">search_off</span>
+				<h3>No se encontraron países</h3>
+				<p>Intenta con otros términos o cambia los filtros.</p>
+				<Button on:click={clearFilters} variant="raised">
+					<Label>Limpiar filtros</Label>
+				</Button>
 			</div>
-			{/each}
 		{:else}
-			<div class="container text-center mt-5">
-				<div class="alert alert-warning" role="alert">
-					<h5>😕 No se encontraron países</h5>
-					<p>Intenta con otros términos de búsqueda o cambia los filtros.</p>
-					<button class="btn btn-primary" on:click={clearFilters}>
-						Limpiar filtros
-					</button>
-				</div>
+			<div class="paises-grid">
+				{#each countriesData as country (country.cca3)}
+					<Card class="country-card">
+						<div class="card-media">
+							<img
+								src={country.flags?.svg}
+								alt={country.flags?.alt || country.name.common}
+								class="flag-img"
+								loading="lazy" />
+						</div>
+						<Content class="card-body-content">
+							<h3 class="country-name">{country.name.common}</h3>
+							<p class="country-official">{country.name.official}</p>
+							<div class="pais-badges">
+								{#if country.capital?.length}
+									<span class="badge badge-capital">{country.capital[0]}</span>
+								{/if}
+								<span class="badge badge-pop">{formatPoblacion(country.population)}</span>
+								<span class="badge badge-region">{country.region}</span>
+								<span class="badge badge-code">{country.cca3}</span>
+							</div>
+						</Content>
+					</Card>
+				{/each}
 			</div>
 		{/if}
 	{/if}
@@ -223,110 +145,214 @@
 <Footer />
 
 <style>
-	main {
+	.main-container {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 88px 1.5rem 2rem;
+	}
+
+	/* Loading */
+	.loading-center {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		padding: 5rem 2rem;
+		color: #FC4A1A;
+	}
+
+	.loading-center p {
+		margin: 0;
+		font-size: 0.95rem;
+		color: #666;
+	}
+
+	/* Error */
+	.error-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 4rem 2rem;
+		color: #d32f2f;
+		text-align: center;
+	}
+
+	.error-icon {
+		font-size: 2.5rem !important;
+	}
+
+	/* Filtros */
+	.filtros-bar {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 1rem;
-		padding: 1rem;
-		margin-top: 5rem;
-		margin-bottom: 5rem;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 1rem 1.25rem;
+		background: #ffffff;
+		border: 1px solid rgba(252, 74, 26, 0.15);
+		border-radius: 12px;
+		box-shadow: 0 2px 12px rgba(252, 74, 26, 0.08);
+		margin-bottom: 1.75rem;
 	}
 
-	.filters-container {
-		background: white;
-		padding: 1.5rem;
-		border-radius: 15px;
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	.filtro-search {
+		flex: 1 1 240px;
+		min-width: 200px;
 	}
 
-	.country-item {
-		animation: fadeIn 0.3s ease-in;
+	.filtro-region {
+		min-width: 180px;
 	}
 
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-			transform: translateY(10px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+	.resultado-contador {
+		margin-left: auto;
+		font-size: 0.82rem;
+		color: #666;
+		white-space: nowrap;
 	}
 
-	img {
-		width: 75px;
-		height: 75px;
-		margin-bottom: 1rem;
-		object-fit: cover;
-		transition: transform 0.2s;
+	.resultado-contador strong {
+		color: #FC4A1A;
+		font-weight: 600;
 	}
 
-	img:hover {
-		transform: scale(1.1);
+	/* Grid */
+	.paises-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+		gap: 1.25rem;
+		align-items: start;
 	}
 
-	.accordion {
-		box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-		border-radius: 15px;
+	/* Cards — usando :global porque SMUI inyecta el elemento */
+	:global(.country-card) {
+		height: 100% !important;
+		border-radius: 12px !important;
+		overflow: hidden !important;
+		transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+		border: 1px solid rgba(0, 0, 0, 0.08) !important;
+	}
+
+	:global(.country-card:hover) {
+		transform: translateY(-5px) !important;
+		box-shadow: 0 16px 40px rgba(252, 74, 26, 0.18) !important;
+	}
+
+	.card-media {
+		line-height: 0;
 		overflow: hidden;
-		background: linear-gradient(to right, rgb(252, 74, 26), rgb(247, 183, 51));
-		margin-bottom: 1rem;
-		transition: transform 0.2s;
 	}
 
-	.accordion:hover {
-		transform: translateX(5px);
-	}
-
-	.accordion__label, .accordion__content {
-		padding: 14px 20px;
-	}
-
-	.accordion__label {
+	.flag-img {
+		width: 100%;
+		height: 155px;
+		object-fit: cover;
 		display: block;
-		color: white;
-		font-weight: bold;
-		cursor: pointer;
-		position: relative;
-		transition: background-color 0.1s;
+		transition: transform 0.3s ease;
 	}
 
-	.accordion__label:hover {
-		background-color: rgba(0, 0, 0, 0.1);
+	:global(.country-card:hover) .flag-img {
+		transform: scale(1.04);
 	}
 
-	.accordion__content {
-		background: white;
-		line-height: 1.6;
-		font-size: 0.85em;
-		display: none;
+	:global(.card-body-content) {
+		padding: 0.9rem !important;
 	}
 
-	.accordion__input {
-		display: none;
+	.country-name {
+		font-size: 1rem;
+		font-weight: 600;
+		margin: 0 0 0.2rem;
+		color: #1a1a1a;
+		line-height: 1.4;
 	}
 
-	.accordion__input:checked ~ .accordion__content {
-		display: block;
+	.country-official {
+		font-size: 0.72rem;
+		color: #888;
+		margin: 0 0 0.75rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		line-height: 1.4;
 	}
 
-	.container {
-		max-width: 100%;
+	.pais-badges {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
 	}
 
-	.input-group-text {
-		background-color: #f8f9fa;
-		border-right: none;
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.25rem 0.6rem;
+		border-radius: 999px;
+		font-size: 0.68rem;
+		font-weight: 500;
+		line-height: 1;
+		white-space: nowrap;
 	}
 
-	.form-control:focus {
-		border-color: rgb(252, 74, 26);
-		box-shadow: 0 0 0 0.2rem rgba(252, 74, 26, 0.25);
+	.badge-capital {
+		background: rgba(5, 150, 105, 0.1);
+		color: #059669;
+		border: 1px solid rgba(5, 150, 105, 0.25);
 	}
 
-	.form-select:focus {
-		border-color: rgb(247, 183, 51);
-		box-shadow: 0 0 0 0.2rem rgba(247, 183, 51, 0.25);
+	.badge-pop {
+		background: rgba(252, 74, 26, 0.1);
+		color: #c23300;
+		border: 1px solid rgba(252, 74, 26, 0.25);
+	}
+
+	.badge-region {
+		background: rgba(247, 183, 51, 0.15);
+		color: #b45309;
+		border: 1px solid rgba(247, 183, 51, 0.35);
+	}
+
+	.badge-code {
+		background: rgba(0, 0, 0, 0.05);
+		color: #666;
+		border: 1px solid rgba(0, 0, 0, 0.1);
+		letter-spacing: 0.06em;
+		font-family: 'Consolas', monospace;
+	}
+
+	/* Sin resultados */
+	.no-resultados {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 4rem 2rem;
+		text-align: center;
+		color: #666;
+	}
+
+	.no-resultados h3 {
+		margin: 0;
+		color: #333;
+	}
+
+	.no-resultados p { margin: 0; }
+
+	/* Responsive */
+	@media (max-width: 640px) {
+		.filtros-bar {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.resultado-contador {
+			text-align: center;
+			margin-left: 0;
+		}
+
+		.paises-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>
