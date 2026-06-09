@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import svelte from 'rollup-plugin-svelte';
+import preprocess from 'svelte-preprocess';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
 import resolve from '@rollup/plugin-node-resolve';
@@ -39,8 +40,10 @@ export default {
 	},
 	plugins: [
 		svelte({
+			preprocess: preprocess({
+				scss: { includePaths: ['src', 'node_modules'] }
+			}),
 			compilerOptions: {
-				// enable run-time checks when not in production
 				dev: !production
 			}
 		}),
@@ -55,7 +58,7 @@ export default {
 		// https://github.com/rollup/plugins/tree/master/packages/commonjs
 		resolve({
 			browser: true,
-			dedupe: ['svelte'],
+			dedupe: ['svelte', '@smui/common'],
 			exportConditions: ['svelte']
 		}),
 		commonjs(),
